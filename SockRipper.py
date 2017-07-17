@@ -15,6 +15,9 @@ class SockRipper:
             self.bannerGrab(sock, port)
         except (socket.timeout, ConnectionRefusedError):
             print('\t[-] {} Closed'.format(port))
+            pass
+        except OverflowError:
+            print('\t[**] Port Is Invalid 1-65535')
 
     def portScan_TCP(self):
         # __function__ = "portScan_TCP"
@@ -116,7 +119,8 @@ class SockRipper:
         method_to_call = getattr(self, 'portScan_' + mode.upper())
         method_to_call()
 
-        self.save_IP()
+        if bool(self.port_status):
+            self.save_IP()
 
         # Methods to Finish
         # self.load_VulnFile()
