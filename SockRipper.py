@@ -42,7 +42,7 @@ class SockRipper:
 
     def bannerGrab(self, sock, port):
         # __function__ = "bannerGrab_TCP"
-        # print("SockRipper.{}".format(__function__))
+        # print("SockRipper.{}".f   ormat(__function__))
 
         sock.sendall(str.encode('GET /\r\n'))
         banner = sock.recv(1024).decode('utf-8')
@@ -71,11 +71,11 @@ class SockRipper:
         # TODO compare_banners
 
     def summary(self):
-        summary = 'Scan Result for {} {}\n'.format(self.hostname, self.ip)
+        summary = '[*] Scan Result for {} {}\n'.format(self.hostname, self.ip)
         for key in self.port_status:
-            summary += '\tPort {} {}\n'.format(key, self.port_status[key][0])
+            summary += '\t[+] Port {} {}\n'.format(key, self.port_status[key][0])
             for line in self.port_status[key][1].split('\n'):
-                summary += '{}\n'.format(line)
+                summary += '\t\t{}\n'.format(line)
         return summary
 
     def save_IP(self):
@@ -110,16 +110,15 @@ class SockRipper:
         else:
             self.resolve_IP()
 
-        print('Scan for {} {}'.format(self.hostname, self.ip))
+        print('\nScan for {} {}'.format(self.hostname, self.ip))
+
         # Decide Which Scan Mode
         method_to_call = getattr(self, 'portScan_' + mode.upper())
         method_to_call()
 
-
         self.save_IP()
 
         # Methods to Finish
-        # self.bannerGrab_TCP()
         # self.load_VulnFile()
         # self.compare_banners()
 
@@ -139,7 +138,7 @@ if __name__ == '__main__':
         if ', ' in args.p:
             args.p = args.p.split(', ')
         elif '-' in args.p:
-            args.p = range(int(args.p.split('-')[0]), int(args.p.split('-')[1]))
+            args.p = range(int(args.p.split('-')[0]), int(args.p.split('-')[1])+1)
         else:
             args.p = int(args.p)
 
