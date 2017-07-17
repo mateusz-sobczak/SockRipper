@@ -1,5 +1,6 @@
 import argparse
 import socket
+import datetime
 
 
 class SockRipper:
@@ -8,12 +9,12 @@ class SockRipper:
         # print("SockRipper.{}".format(__function__))
 
         try:
-            sock.settimeout(3)
+            sock.settimeout(1)
             sock.connect((self.ip, port))
-            print('{} Opened'.format(port))
-            self.bannerGrab(sock)
-        except socket.timeout:
-            print('{} Closed'.format(port))
+            print('\t[+] {} Opened'.format(port))
+            self.bannerGrab(sock, port)
+        except (socket.timeout, ConnectionRefusedError):
+            print('\t[-] {} Closed'.format(port))
 
     def portScan_TCP(self):
         # __function__ = "portScan_TCP"
@@ -39,14 +40,15 @@ class SockRipper:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     self.conn(sock, int(p))
 
-    def bannerGrab(self, sock):
-        __function__ = "bannerGrab_TCP"
-        print("SockRipper.{}".format(__function__))
-        # TODO bannerGrab_TCP
+    def bannerGrab(self, sock, port):
+        # __function__ = "bannerGrab_TCP"
+        # print("SockRipper.{}".format(__function__))
 
         sock.sendall(str.encode('GET /\r\n'))
-        data = sock.recv(1024).decode('utf-8')
-        print(data)
+        banner = sock.recv(1024).decode('utf-8')
+        self.port_status.setdefault(port, [])
+        self.port_status[port].append('Opened')
+        self.port_status[port].append(banner)
 
     def resolve_IP(self):
         # __function__ = "resolve_IP"
@@ -68,10 +70,27 @@ class SockRipper:
         print("SockRipper.{}".format(__function__))
         # TODO compare_banners
 
+    def summary(self):
+        summary = 'Scan Result for {} {}\n'.format(self.hostname, self.ip)
+        for key in self.port_status:
+            summary += '\tPort {} {}\n'.format(key, self.port_status[key][0])
+            for line in self.port_status[key][1].split('\n'):
+                summary += '{}\n'.format(line)
+        return summary
+
     def save_IP(self):
-        __function__ = "save_IP"
-        print("SockRipper.{}".format(__function__))
-        # TODO save_IP
+        # __function__ = "save_IP"
+        # print("SockRipper.{}".format(__function__))
+
+        # Save individual IPs
+        with open('Results/{}-{}.txt'.format(self.hostname, self.ip), 'w+') as f:
+            f.writelines(self.summary())
+            print('\nResults Saved to {}'.format(f.name))
+
+        # Save to Master File
+        with open('Results/{}.txt'.format(datetime.datetime.now().strftime('%m-%d-%y')), 'a+') as f:
+            f.writelines(self.summary())
+            print('Also Saved to Master {}\n'.format(f.name))
 
     def __init__(self, ip=None, host=None, mode='TCP', port=[21, 22, 80, 443], **kwargs):
         # Function Signature
@@ -83,8 +102,7 @@ class SockRipper:
         self.mode = mode
         self.hostname = host
         self.port = port
-        self.port_status_tcp = {}  # {'PortNO': 'Status' 'Banner'}
-        self.port_status_udp = {}  # {'PortNO': 'Status' 'Banner'}
+        self.port_status = {}  # {'PortNO': 'Status' 'Banner'}
 
         # Fill all Variables
         if self.ip is None:
@@ -92,17 +110,18 @@ class SockRipper:
         else:
             self.resolve_IP()
 
-        print(self.__dict__)
-
+        print('Scan for {} {}'.format(self.hostname, self.ip))
         # Decide Which Scan Mode
         method_to_call = getattr(self, 'portScan_' + mode.upper())
         method_to_call()
+
+
+        self.save_IP()
 
         # Methods to Finish
         # self.bannerGrab_TCP()
         # self.load_VulnFile()
         # self.compare_banners()
-        # self.save_IP()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='This is SockRipper a Network Scanning Tool')
@@ -154,7 +173,7 @@ if __name__ == '__main__':
                 else:
                     SockRipper(ip=ip.strip('\n'))
     elif args.hostFile:
-        with open(args.ipHost, 'r') as file:
+        with open(args.hostFile, 'r') as file:
             for host in file:
                 if args.mode and args.p:
                     SockRipper(host=host.strip('\n'), mode=args.mode, port=args.p)
