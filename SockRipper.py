@@ -154,7 +154,7 @@ if __name__ == '__main__':
                 else:
                     SockRipper(ip=ip.strip('\n'))
     elif args.hostFile:
-        with open(args.ipFile, 'r') as file:
+        with open(args.ipHost, 'r') as file:
             for host in file:
                 if args.mode and args.p:
                     SockRipper(host=host.strip('\n'), mode=args.mode, port=args.p)
