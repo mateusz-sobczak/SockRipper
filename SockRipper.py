@@ -56,12 +56,20 @@ class SockRipper:
     def resolve_IP(self):
         # __function__ = "resolve_IP"
         # print("SockRipper.{}".format(__function__))
-        self.hostname = socket.gethostbyaddr(self.ip)[0]
+        try:
+            self.hostname = socket.gethostbyaddr(self.ip)[0]
+        except:
+            print('\t[**] IP Could Not Be Mapped To DNS Name')
+            self.hostname = 'None'
 
     def resolve_DNS(self):
         # __function__ = "resolve_DNS"
         # print("SockRipper.{}".format(__function__))
-        self.ip = socket.gethostbyname(self.hostname)
+        try:
+            self.ip = socket.gethostbyname(self.hostname)
+        except:
+            print('\t[**] DNS Could Not Be Mapped To IP\nExiting...')
+            exit(0)
 
     def load_VulnFile(self):
         __function__ = "load_VulnFile"
@@ -111,6 +119,7 @@ class SockRipper:
         if self.ip is None:
             self.resolve_DNS()
         else:
+            # self.hostname = "none"
             self.resolve_IP()
 
         print('\nScan for {} {}'.format(self.hostname, self.ip))
