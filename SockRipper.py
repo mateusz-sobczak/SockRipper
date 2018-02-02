@@ -1,6 +1,7 @@
 import argparse
 import socket
 import datetime
+import os
 
 
 class SockRipper:
@@ -18,6 +19,8 @@ class SockRipper:
             pass
         except OverflowError:
             print('\t[**] Port Is Invalid 1-65535')
+        except ConnectionResetError:
+            print('\t [-] {} Connection Closed'.format(port))
 
     def portScan_TCP(self):
         # __function__ = "portScan_TCP"
@@ -40,7 +43,7 @@ class SockRipper:
                 self.conn(sock, self.port)
         else:
             for p in self.port:
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
                     self.conn(sock, int(p))
 
     def bannerGrab(self, sock, port):
@@ -93,6 +96,10 @@ class SockRipper:
         # __function__ = "save_IP"
         # print("SockRipper.{}".format(__function__))
 
+        # Check if Results directory exists
+        if not os.path.isdir('Results'):
+            os.mkdir('Results')
+
         # Save individual IPs
         with open('Results/{}-{}.txt'.format(self.hostname, self.ip), 'w+') as f:
             f.writelines(self.summary())
@@ -128,12 +135,17 @@ class SockRipper:
         method_to_call = getattr(self, 'portScan_' + mode.upper())
         method_to_call()
 
+        # Print Summary
+        # print('\n\n', self.summary())
+
+        # Save Results
         if bool(self.port_status):
             self.save_IP()
 
         # Methods to Finish
         # self.load_VulnFile()
         # self.compare_banners()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='This is SockRipper a Network Scanning Tool')
